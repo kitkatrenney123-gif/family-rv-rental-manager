@@ -1,1 +1,349 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="theme-color" content="#183e36"/><title>Family RV Rental Manager</title></head><body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family RV Rental Manager</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#19342e;background:#f3f7f4}
+*{box-sizing:border-box}
+body{margin:0}
+header{background:#173e35;color:white;padding:20px 5%}
+header h1{margin:0;font-size:1.6rem}
+header p{margin:5px 0 0;color:#d4e7dd}
+main{max-width:1150px;margin:auto;padding:20px}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+button,.btn{border:0;border-radius:9px;padding:10px 14px;background:#17664f;color:white;font-weight:650;cursor:pointer}
+nav button{background:#e0ebe5;color:#173e35}
+nav button.active{background:#17664f;color:white}
+.panel{background:white;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 2px 12px #19342e12}
+h2{margin:0 0 16px}
+h3{margin:8px 0}
+label{display:block;font-size:.9rem;font-weight:600;margin:10px 0 5px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #b9cfc4;border-radius:8px;font:inherit;background:white}
+textarea{min-height:65px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.item{border:1px solid #dce7e0;border-radius:12px;padding:14px;background:#fff}
+.item img{width:100%;height:130px;object-fit:cover;border-radius:8px}
+.muted{color:#61766c;font-size:.9rem}
+.stat{font-size:2rem;font-weight:750;color:#17664f}
+.hidden{display:none!important}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.row button{flex:0 0 auto}
+.pill{display:inline-block;border-radius:20px;padding:4px 9px;background:#e3f2e8;font-size:.8rem}
+.danger{background:#a93636}
+.secondary{background:#e0ebe5;color:#173e35}
+.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.day{border:1px solid #dce7e0;border-radius:6px;min-height:80px;padding:5px;font-size:.82rem;overflow-wrap:anywhere}
+.day strong{display:block}
+.event{background:#d6eee2;border-radius:5px;padding:3px;margin-top:3px;font-size:.72rem}
+.weekday{text-align:center;font-weight:700;font-size:.78rem}
+.checks label{display:flex;align-items:center;gap:10px;font-weight:400}
+.checks input{width:auto}
+small{color:#60736b}
+.notice{padding:10px;border-radius:8px;background:#fff5d9;margin:12px 0}
+@media(max-width:600px){
+main{padding:12px}
+.panel{padding:14px}
+.day{min-height:65px;font-size:.7rem}
+.event{font-size:.63rem}
+header{padding:18px}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>🚐 Family RV Rental Manager</h1>
+<p>Campers • Trucks • Reservations • Checklists</p>
+</header>
+<main>
+<div class="notice">Prototype: information saves only in this browser, not across family devices. Do not enter sensitive customer details. User roles are a preview, not secure logins.</div>
+<nav id="nav">
+<button data-tab="dashboard" class="active">Dashboard</button>
+<button data-tab="campers">20 Campers</button>
+<button data-tab="trucks">4 Trucks</button>
+<button data-tab="bookings">Reservations</button>
+<button data-tab="calendar">Calendar</button>
+<button data-tab="checklists">Checklists</button>
+</nav>
+<section id="dashboard" class="panel">
+<h2>Dashboard</h2>
+<div class="grid">
+<div class="item"><div class="muted">Campers</div><div class="stat">20</div></div>
+<div class="item"><div class="muted">Towing trucks</div><div class="stat">4</div></div>
+<div class="item"><div class="muted">Reservations</div><div class="stat" id="reservationCount">0</div></div>
+<div class="item"><div class="muted">Currently out</div><div class="stat" id="outCount">0</div></div>
+</div>
+<p class="muted">Choose a tab above to manage your fleet.</p>
+</section>
+<section id="campers" class="panel hidden">
+<h2>Campers</h2>
+<p class="muted">Tap Save on each camper to update its details.</p>
+<div id="camperGrid" class="grid"></div>
+</section>
+<section id="trucks" class="panel hidden">
+<h2>Towing trucks</h2>
+<div id="truckGrid" class="grid"></div>
+</section>
+<section id="bookings" class="panel hidden">
+<h2>Add a reservation</h2>
+<form id="bookingForm">
+<div class="grid">
+<div><label>Camper</label><select id="bookingCamper" required></select></div>
+<div><label>Truck (optional)</label><select id="bookingTruck"></select></div>
+<div><label>Departure date</label><input type="date" id="startDate" required></div>
+<div><label>Return date</label><input type="date" id="endDate" required></div>
+<div><label>Reservation name / reference</label><input id="bookingName" maxlength="80" placeholder="e.g. Smith rental" required></div>
+</div>
+<p><button type="submit">Save reservation</button></p>
+</form>
+<h2>Reservations</h2>
+<div id="bookingList"></div>
+</section>
+<section id="calendar" class="panel hidden">
+<div class="row">
+<button id="prevMonth" class="secondary">← Previous</button>
+<h2 id="monthLabel" style="text-align:center;margin:0"></h2>
+<button id="nextMonth" class="secondary">Next →</button>
+</div>
+<div id="calendarGrid" class="calendar" style="margin-top:18px"></div>
+</section>
+<section id="checklists" class="panel hidden">
+<h2>Departure & return checklists</h2>
+<label>Choose a reservation</label>
+<select id="checkBooking"></select>
+<div id="checkContent"></div>
+</section>
+<div class="panel">
+<div class="row">
+<div>
+<strong>Backup your records</strong>
+<p class="muted" style="margin:4px 0">Export data regularly. Import restores a saved backup on this device.</p>
+</div>
+<button id="exportBtn">Export JSON</button>
+<label class="btn" style="margin:0;text-align:center">Import JSON<input type="file" id="importFile" accept="application/json" hidden></label>
+</div>
+</div>
+</main>
+<script>
+'use strict';
+const KEY='family-rv-manager-v2';
+const departure=[
+'Exterior damage inspected',
+'Tires and pressure checked',
+'Lights and brakes checked',
+'Hitch and safety chains checked',
+'Propane checked',
+'Water and tanks checked',
+'Interior cleaned',
+'Appliances tested',
+'Keys and paperwork provided'
+];
+const returning=[
+'Exterior damage inspected',
+'Interior damage inspected',
+'Keys returned',
+'Waste tanks checked',
+'Fuel / propane checked',
+'Equipment accounted for',
+'Interior cleaned',
+'Maintenance needs recorded'
+];
+const defaults=()=>({
+campers:Array.from({length:20},(_,i)=>({
+id:i+1,name:'Camper '+(i+1),
+type:i%2?'Fifth wheel':'Bumper pull',
+vin:'',plate:'',notes:'',photo:''
+})),
+trucks:Array.from({length:4},(_,i)=>({
+id:i+1,name:'Truck '+(i+1),plate:'',notes:''
+})),
+bookings:[]
+});
+let state;
+try{
+state=JSON.parse(localStorage.getItem(KEY))||defaults();
+if(!Array.isArray(state.campers)||!Array.isArray(state.trucks)||!Array.isArray(state.bookings))throw Error('Bad data');
+}catch{state=defaults()}
+const $=id=>document.getElementById(id);
+const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const camperName=id=>state.campers.find(x=>x.id===Number(id))?.name||'Unknown camper';
+const truckName=id=>state.trucks.find(x=>x.id===Number(id))?.name||'Unknown truck';
+const today=()=>new Date().toLocaleDateString('en-CA');
+function render(){
+const t=today();
+$('reservationCount').textContent=state.bookings.length;
+$('outCount').textContent=state.bookings.filter(b=>b.start<=t&&b.end>=t).length;
+renderCampers();renderTrucks();renderBookings();renderCalendar();renderChecks();
+}
+function renderCampers(){
+$('camperGrid').innerHTML=state.campers.map(c=>`
+<article class="item">
+${c.photo?`<img src="${esc(c.photo)}" alt="${esc(c.name)}">`:''}
+<h3>${esc(c.name)}</h3>
+<label>Name</label><input data-camper="${c.id}" data-field="name" value="${esc(c.name)}">
+<label>Type</label>
+<select data-camper="${c.id}" data-field="type">
+<option ${c.type==='Bumper pull'?'selected':''}>Bumper pull</option>
+<option ${c.type==='Fifth wheel'?'selected':''}>Fifth wheel</option>
+</select>
+<label>VIN</label><input data-camper="${c.id}" data-field="vin" value="${esc(c.vin)}">
+<label>License plate</label><input data-camper="${c.id}" data-field="plate" value="${esc(c.plate)}">
+<label>Notes</label><textarea data-camper="${c.id}" data-field="notes">${esc(c.notes)}</textarea>
+<label>Photo (small image, under 500 KB)</label>
+<input type="file" accept="image/*" data-photo="${c.id}">
+<p><button data-save-camper="${c.id}">Save camper</button></p>
+</article>`).join('');
+}
+function renderTrucks(){
+$('truckGrid').innerHTML=state.trucks.map(t=>`
+<article class="item">
+<h3>${esc(t.name)}</h3>
+<label>Name</label><input data-truck="${t.id}" data-field="name" value="${esc(t.name)}">
+<label>License plate</label><input data-truck="${t.id}" data-field="plate" value="${esc(t.plate)}">
+<label>Notes</label><textarea data-truck="${t.id}" data-field="notes">${esc(t.notes)}</textarea>
+<p><button data-save-truck="${t.id}">Save truck</button></p>
+</article>`).join('');
+}
+function options(items,blank){
+return (blank?'<option value="">No truck</option>':'')+
+items.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
+}
+function renderBookings(){
+$('bookingCamper').innerHTML=options(state.campers);
+$('bookingTruck').innerHTML=options(state.trucks,true);
+$('bookingList').innerHTML=state.bookings.length?
+state.bookings.slice().sort((a,b)=>a.start.localeCompare(b.start)).map(b=>`
+<div class="item" style="margin:8px 0">
+<strong>${esc(b.name)}</strong>
+<span class="pill">${esc(camperName(b.camper))}</span>
+<p>${esc(b.start)} to ${esc(b.end)} · ${b.truck?esc(truckName(b.truck)):'No truck'}</p>
+<button class="danger" data-delete="${esc(b.id)}">Delete reservation</button>
+</div>`).join(''):'<p class="muted">No reservations yet.</p>';
+}
+$('bookingForm').addEventListener('submit',e=>{
+e.preventDefault();
+const b={
+id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+name:$('bookingName').value.trim(),
+camper:Number($('bookingCamper').value),
+truck:$('bookingTruck').value?Number($('bookingTruck').value):null,
+start:$('startDate').value,
+end:$('endDate').value,
+departure:{},returning:{}
+};
+if(!b.name||!b.start||!b.end||b.end<b.start){
+alert('Enter a name and valid dates.');return;
+}
+const overlap=state.bookings.find(x=>x.start<=b.end&&b.start<=x.end&&(x.camper===b.camper||(b.truck&&x.truck===b.truck)));
+if(overlap){
+alert('That camper or truck is already booked during those dates.');return;
+}
+state.bookings.push(b);
+save();e.target.reset();render();
+alert('Reservation saved.');
+});
+let month=new Date();month.setDate(1);
+function renderCalendar(){
+const y=month.getFullYear(),m=month.getMonth();
+$('monthLabel').textContent=month.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="weekday">${d}</div>`).join('');
+const offset=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+for(let i=0;i<offset;i++)html+='<div></div>';
+for(let d=1;d<=days;d++){
+const date=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+const bookings=state.bookings.filter(b=>b.start<=date&&b.end>=date);
+html+=`<div class="day"><strong>${d}</strong>${bookings.map(b=>`<div class="event" title="${esc(b.name)}">${esc(camperName(b.camper))}</div>`).join('')}</div>`;
+}
+$('calendarGrid').innerHTML=html;
+}
+$('prevMonth').onclick=()=>{month.setMonth(month.getMonth()-1);renderCalendar()};
+$('nextMonth').onclick=()=>{month.setMonth(month.getMonth()+1);renderCalendar()};
+function renderChecks(selected){
+const select=$('checkBooking');
+const previous=selected||select.value;
+select.innerHTML='<option value="">Choose a reservation</option>'+
+state.bookings.map(b=>`<option value="${esc(b.id)}">${esc(b.name)} — ${esc(camperName(b.camper))}</option>`).join('');
+if(state.bookings.some(b=>b.id===previous))select.value=previous;
+const b=state.bookings.find(x=>x.id===select.value);
+$('checkContent').innerHTML=b?`
+<div class="grid" style="margin-top:15px">
+${[['departure','Before departure',departure],['returning','After return',returning]].map(([key,title,items])=>`
+<div class="item checks"><h3>${title}</h3>
+${items.map((item,i)=>`<label><input type="checkbox" data-check="${key}" data-index="${i}" ${b[key]?.[i]?'checked':''}>${esc(item)}</label>`).join('')}
+</div>`).join('')}
+</div>`:'<p class="muted">Select a reservation to complete its checklists.</p>';
+}
+$('checkBooking').onchange=()=>renderChecks();
+document.addEventListener('change',e=>{
+const el=e.target;
+if(el.dataset.check){
+const b=state.bookings.find(x=>x.id===$('checkBooking').value);
+if(b){
+b[el.dataset.check]??={};
+b[el.dataset.check][el.dataset.index]=el.checked;
+save();
+}
+}
+if(el.dataset.photo){
+const f=el.files[0];if(!f)return;
+if(f.size>500000){
+alert('Choose an image smaller than 500 KB.');
+el.value='';return;
+}
+const reader=new FileReader();
+reader.onload=()=>{
+const c=state.campers.find(x=>x.id===Number(el.dataset.photo));
+c.photo=reader.result;
+try{save();render()}catch{alert('Browser storage is full. Use a smaller photo.')}
+};
+reader.readAsDataURL(f);
+}
+});
+document.addEventListener('click',e=>{
+const b=e.target.closest('button');if(!b)return;
+if(b.dataset.tab){
+document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hidden',s.id!==b.dataset.tab));
+document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));
+return;
+}
+if(b.dataset.saveCamper){
+const id=Number(b.dataset.saveCamper),c=state.campers.find(x=>x.id===id);
+document.querySelectorAll(`[data-camper="${id}"]`).forEach(x=>c[x.dataset.field]=x.value);
+save();render();alert('Camper saved.');
+}
+if(b.dataset.saveTruck){
+const id=Number(b.dataset.saveTruck),t=state.trucks.find(x=>x.id===id);
+document.querySelectorAll(`[data-truck="${id}"]`).forEach(x=>t[x.dataset.field]=x.value);
+save();render();alert('Truck saved.');
+}
+if(b.dataset.delete){
+if(confirm('Delete this reservation?')){
+state.bookings=state.bookings.filter(x=>x.id!==b.dataset.delete);
+save();render();
+}
+}
+});
+$('exportBtn').onclick=()=>{
+const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),
+url=URL.createObjectURL(blob),a=document.createElement('a');
+a.href=url;a.download='rv-manager-backup.json';a.click();
+setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('importFile').onchange=async e=>{
+const file=e.target.files[0];if(!file)return;
+try{
+const data=JSON.parse(await file.text());
+if(!Array.isArray(data.campers)||!Array.isArray(data.trucks)||!Array.isArray(data.bookings))throw Error('Invalid backup');
+if(!confirm('Replace current browser data with this backup?'))return;
+state=data;save();render();alert('Backup restored.');
+}catch(err){alert('Could not import backup: '+err.message)}
+e.target.value='';
+};
+render();
+</script>
+</body>
+</html>

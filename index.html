@@ -1,349 +1,85 @@
-
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Family RV Rental Manager</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Family RV Rental Manager</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#19342e;background:#f3f7f4}
-*{box-sizing:border-box}
-body{margin:0}
-header{background:#173e35;color:white;padding:20px 5%}
-header h1{margin:0;font-size:1.6rem}
-header p{margin:5px 0 0;color:#d4e7dd}
-main{max-width:1150px;margin:auto;padding:20px}
-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-button,.btn{border:0;border-radius:9px;padding:10px 14px;background:#17664f;color:white;font-weight:650;cursor:pointer}
-nav button{background:#e0ebe5;color:#173e35}
-nav button.active{background:#17664f;color:white}
-.panel{background:white;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 2px 12px #19342e12}
-h2{margin:0 0 16px}
-h3{margin:8px 0}
-label{display:block;font-size:.9rem;font-weight:600;margin:10px 0 5px}
-input,select,textarea{width:100%;padding:10px;border:1px solid #b9cfc4;border-radius:8px;font:inherit;background:white}
-textarea{min-height:65px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
-.item{border:1px solid #dce7e0;border-radius:12px;padding:14px;background:#fff}
-.item img{width:100%;height:130px;object-fit:cover;border-radius:8px}
-.muted{color:#61766c;font-size:.9rem}
-.stat{font-size:2rem;font-weight:750;color:#17664f}
-.hidden{display:none!important}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.row>*{flex:1}
-.row button{flex:0 0 auto}
-.pill{display:inline-block;border-radius:20px;padding:4px 9px;background:#e3f2e8;font-size:.8rem}
-.danger{background:#a93636}
-.secondary{background:#e0ebe5;color:#173e35}
-.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.day{border:1px solid #dce7e0;border-radius:6px;min-height:80px;padding:5px;font-size:.82rem;overflow-wrap:anywhere}
-.day strong{display:block}
-.event{background:#d6eee2;border-radius:5px;padding:3px;margin-top:3px;font-size:.72rem}
-.weekday{text-align:center;font-weight:700;font-size:.78rem}
-.checks label{display:flex;align-items:center;gap:10px;font-weight:400}
-.checks input{width:auto}
-small{color:#60736b}
-.notice{padding:10px;border-radius:8px;background:#fff5d9;margin:12px 0}
-@media(max-width:600px){
-main{padding:12px}
-.panel{padding:14px}
-.day{min-height:65px;font-size:.7rem}
-.event{font-size:.63rem}
-header{padding:18px}
-}
-</style>
-</head>
-<body>
-<header>
-<h1>🚐 Family RV Rental Manager</h1>
-<p>Campers • Trucks • Reservations • Checklists</p>
-</header>
-<main>
-<div class="notice">Prototype: information saves only in this browser, not across family devices. Do not enter sensitive customer details. User roles are a preview, not secure logins.</div>
-<nav id="nav">
-<button data-tab="dashboard" class="active">Dashboard</button>
-<button data-tab="campers">20 Campers</button>
-<button data-tab="trucks">4 Trucks</button>
-<button data-tab="bookings">Reservations</button>
-<button data-tab="calendar">Calendar</button>
-<button data-tab="checklists">Checklists</button>
-</nav>
-<section id="dashboard" class="panel">
-<h2>Dashboard</h2>
-<div class="grid">
-<div class="item"><div class="muted">Campers</div><div class="stat">20</div></div>
-<div class="item"><div class="muted">Towing trucks</div><div class="stat">4</div></div>
-<div class="item"><div class="muted">Reservations</div><div class="stat" id="reservationCount">0</div></div>
-<div class="item"><div class="muted">Currently out</div><div class="stat" id="outCount">0</div></div>
-</div>
-<p class="muted">Choose a tab above to manage your fleet.</p>
-</section>
-<section id="campers" class="panel hidden">
-<h2>Campers</h2>
-<p class="muted">Tap Save on each camper to update its details.</p>
-<div id="camperGrid" class="grid"></div>
-</section>
-<section id="trucks" class="panel hidden">
-<h2>Towing trucks</h2>
-<div id="truckGrid" class="grid"></div>
-</section>
-<section id="bookings" class="panel hidden">
-<h2>Add a reservation</h2>
-<form id="bookingForm">
-<div class="grid">
-<div><label>Camper</label><select id="bookingCamper" required></select></div>
-<div><label>Truck (optional)</label><select id="bookingTruck"></select></div>
-<div><label>Departure date</label><input type="date" id="startDate" required></div>
-<div><label>Return date</label><input type="date" id="endDate" required></div>
-<div><label>Reservation name / reference</label><input id="bookingName" maxlength="80" placeholder="e.g. Smith rental" required></div>
-</div>
-<p><button type="submit">Save reservation</button></p>
-</form>
-<h2>Reservations</h2>
-<div id="bookingList"></div>
-</section>
-<section id="calendar" class="panel hidden">
-<div class="row">
-<button id="prevMonth" class="secondary">← Previous</button>
-<h2 id="monthLabel" style="text-align:center;margin:0"></h2>
-<button id="nextMonth" class="secondary">Next →</button>
-</div>
-<div id="calendarGrid" class="calendar" style="margin-top:18px"></div>
-</section>
-<section id="checklists" class="panel hidden">
-<h2>Departure & return checklists</h2>
-<label>Choose a reservation</label>
-<select id="checkBooking"></select>
-<div id="checkContent"></div>
-</section>
-<div class="panel">
-<div class="row">
-<div>
-<strong>Backup your records</strong>
-<p class="muted" style="margin:4px 0">Export data regularly. Import restores a saved backup on this device.</p>
-</div>
-<button id="exportBtn">Export JSON</button>
-<label class="btn" style="margin:0;text-align:center">Import JSON<input type="file" id="importFile" accept="application/json" hidden></label>
-</div>
-</div>
-</main>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#172334;background:#f3f6fa}*{box-sizing:border-box}body{margin:0}header{background:#173653;color:white;padding:20px 5%;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h1{font-size:1.45rem;margin:0}h2{margin:0 0 15px}main{max-width:1150px;margin:auto;padding:24px 16px}nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}button{cursor:pointer;border:0;border-radius:9px;padding:11px 15px;font-weight:650;background:#dfe8f2;color:#173653}button.active,.primary{background:#176b9b;color:white}.danger{background:#ffe1e1;color:#922}section{display:none}section.active{display:block}.panel{background:white;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 2px 12px #17365312}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}.stat{background:white;padding:20px;border-radius:12px}.stat strong{display:block;font-size:2rem;color:#176b9b}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.item{border:1px solid #dae3ec;border-radius:12px;padding:15px;background:#fff}.item img{width:100%;height:135px;object-fit:cover;border-radius:9px}.muted{color:#607084;font-size:.9rem}label{display:block;font-size:.88rem;font-weight:650;margin-top:10px}input,select,textarea{width:100%;padding:10px;margin-top:5px;border:1px solid #bac8d6;border-radius:8px;font:inherit}textarea{min-height:65px}.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.day{border:1px solid #dbe3eb;background:white;border-radius:7px;min-height:82px;padding:6px;font-size:.8rem;overflow-wrap:anywhere}.day b{display:block}.event{display:block;background:#e0f2ff;color:#174d70;padding:3px;margin-top:3px;border-radius:4px}.week{font-weight:700;text-align:center;padding:8px 0}.check{display:flex;align-items:flex-start;gap:8px;padding:7px 0}.check input{width:auto;margin-top:3px}.empty{color:#607084}small{font-size:.78rem}@media(max-width:600px){.day{min-height:65px;font-size:.65rem;padding:3px}.event{padding:2px}header{padding:17px}main{padding:14px 9px}}
+</style></head><body>
+<header><div><h1>🚐 Family RV Rental Manager</h1><small>Campers • Trucks • Rentals • Inspections</small></div><span id="storageStatus">Saved on this device</span></header>
+<main><nav id="nav"><button class="active" data-tab="dashboard">Dashboard</button><button data-tab="campers">Campers</button><button data-tab="trucks">Trucks</button><button data-tab="rentals">Rentals</button><button data-tab="calendar">Calendar</button><button data-tab="inspections">Checklists</button></nav>
+<section id="dashboard" class="active"><div class="cards" id="stats"></div><div class="panel"><h2>Upcoming and active rentals</h2><div id="upcoming"></div></div></section>
+<section id="campers"><div class="panel"><h2>Camper details</h2><form id="camperForm"><input type="hidden" id="camperId"><div class="formgrid"><label>Camper name<input id="camperName" required placeholder="Camper 1"></label><label>Type<select id="camperType"><option>Bumper pull</option><option>Fifth wheel</option></select></label><label>VIN<input id="camperVin" placeholder="VIN"></label><label>Photo URL (optional)<input id="camperPhoto" type="url" placeholder="https://..."></label></div><div class="actions"><button class="primary" type="submit">Save camper</button><button type="button" onclick="resetCamper()">Clear</button></div></form></div><div class="grid" id="camperList"></div></section>
+<section id="trucks"><div class="panel"><h2>Towing trucks</h2><form id="truckForm"><input type="hidden" id="truckId"><div class="formgrid"><label>Truck name<input id="truckName" required placeholder="Truck 1"></label><label>Plate / notes<input id="truckNotes" placeholder="Optional"></label></div><div class="actions"><button class="primary">Save truck</button><button type="button" onclick="resetTruck()">Clear</button></div></form></div><div class="grid" id="truckList"></div></section>
+<section id="rentals"><div class="panel"><h2>Book a rental</h2><form id="rentalForm"><div class="formgrid"><label>Camper<select id="rentalCamper" required></select></label><label>Assigned towing truck<select id="rentalTruck"></select></label><label>Customer / reservation name<input id="rentalCustomer" required></label><label>Departure date<input type="date" id="rentalStart" required></label><label>Return date<input type="date" id="rentalEnd" required></label></div><div class="actions"><button class="primary">Add rental</button></div></form></div><div id="rentalList"></div></section>
+<section id="calendar"><div class="panel"><div class="actions" style="justify-content:space-between;align-items:center"><h2 id="monthTitle"></h2><div><button onclick="moveMonth(-1)">←</button> <button onclick="moveMonth(1)">→</button></div></div><div class="calendar" id="calendarGrid"></div></div></section>
+<section id="inspections"><div class="panel"><h2>Departure and return inspections</h2><div class="formgrid"><label>Camper<select id="checkCamper"></select></label><label>Inspection type<select id="checkType"><option value="departure">Before departure</option><option value="return">Upon return</option></select></label></div><div id="checkList"></div><label>Inspection notes<textarea id="checkNotes" placeholder="Damage, missing items, maintenance needs..."></textarea></label><div class="actions"><button class="primary" onclick="saveInspection()">Save inspection</button></div><p class="muted" id="checkSaved"></p></div></section>
+<div class="panel"><button id="importBackup" class="primary" style="display:none">Import saved browser backup into Firebase (owner only)</button><button id="signOut">Sign out</button><small>Firebase-connected version: verify sign-in, permissions, and syncing before entering sensitive customer information.</small></div></main>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<div id="loginPanel" class="panel" style="position:fixed;inset:0;z-index:999;background:#f3f6fa;overflow:auto;padding:7vh max(15px,calc((100vw - 480px)/2))"><h2>Family sign in</h2><p>Only approved family members can access shared rental information.</p><form id="loginForm"><label>Email<input id="loginEmail" type="email" required autocomplete="username"></label><label>Password<input id="loginPassword" type="password" required autocomplete="current-password"></label><p><button class="primary">Sign in</button></p></form><p id="loginMessage"></p></div>
 <script>
 'use strict';
-const KEY='family-rv-manager-v2';
-const departure=[
-'Exterior damage inspected',
-'Tires and pressure checked',
-'Lights and brakes checked',
-'Hitch and safety chains checked',
-'Propane checked',
-'Water and tanks checked',
-'Interior cleaned',
-'Appliances tested',
-'Keys and paperwork provided'
-];
-const returning=[
-'Exterior damage inspected',
-'Interior damage inspected',
-'Keys returned',
-'Waste tanks checked',
-'Fuel / propane checked',
-'Equipment accounted for',
-'Interior cleaned',
-'Maintenance needs recorded'
-];
-const defaults=()=>({
-campers:Array.from({length:20},(_,i)=>({
-id:i+1,name:'Camper '+(i+1),
-type:i%2?'Fifth wheel':'Bumper pull',
-vin:'',plate:'',notes:'',photo:''
-})),
-trucks:Array.from({length:4},(_,i)=>({
-id:i+1,name:'Truck '+(i+1),plate:'',notes:''
-})),
-bookings:[]
-});
-let state;
-try{
-state=JSON.parse(localStorage.getItem(KEY))||defaults();
-if(!Array.isArray(state.campers)||!Array.isArray(state.trucks)||!Array.isArray(state.bookings))throw Error('Bad data');
-}catch{state=defaults()}
-const $=id=>document.getElementById(id);
-const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const camperName=id=>state.campers.find(x=>x.id===Number(id))?.name||'Unknown camper';
-const truckName=id=>state.trucks.find(x=>x.id===Number(id))?.name||'Unknown truck';
-const today=()=>new Date().toLocaleDateString('en-CA');
-function render(){
-const t=today();
-$('reservationCount').textContent=state.bookings.length;
-$('outCount').textContent=state.bookings.filter(b=>b.start<=t&&b.end>=t).length;
-renderCampers();renderTrucks();renderBookings();renderCalendar();renderChecks();
-}
-function renderCampers(){
-$('camperGrid').innerHTML=state.campers.map(c=>`
-<article class="item">
-${c.photo?`<img src="${esc(c.photo)}" alt="${esc(c.name)}">`:''}
-<h3>${esc(c.name)}</h3>
-<label>Name</label><input data-camper="${c.id}" data-field="name" value="${esc(c.name)}">
-<label>Type</label>
-<select data-camper="${c.id}" data-field="type">
-<option ${c.type==='Bumper pull'?'selected':''}>Bumper pull</option>
-<option ${c.type==='Fifth wheel'?'selected':''}>Fifth wheel</option>
-</select>
-<label>VIN</label><input data-camper="${c.id}" data-field="vin" value="${esc(c.vin)}">
-<label>License plate</label><input data-camper="${c.id}" data-field="plate" value="${esc(c.plate)}">
-<label>Notes</label><textarea data-camper="${c.id}" data-field="notes">${esc(c.notes)}</textarea>
-<label>Photo (small image, under 500 KB)</label>
-<input type="file" accept="image/*" data-photo="${c.id}">
-<p><button data-save-camper="${c.id}">Save camper</button></p>
-</article>`).join('');
-}
-function renderTrucks(){
-$('truckGrid').innerHTML=state.trucks.map(t=>`
-<article class="item">
-<h3>${esc(t.name)}</h3>
-<label>Name</label><input data-truck="${t.id}" data-field="name" value="${esc(t.name)}">
-<label>License plate</label><input data-truck="${t.id}" data-field="plate" value="${esc(t.plate)}">
-<label>Notes</label><textarea data-truck="${t.id}" data-field="notes">${esc(t.notes)}</textarea>
-<p><button data-save-truck="${t.id}">Save truck</button></p>
-</article>`).join('');
-}
-function options(items,blank){
-return (blank?'<option value="">No truck</option>':'')+
-items.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
-}
-function renderBookings(){
-$('bookingCamper').innerHTML=options(state.campers);
-$('bookingTruck').innerHTML=options(state.trucks,true);
-$('bookingList').innerHTML=state.bookings.length?
-state.bookings.slice().sort((a,b)=>a.start.localeCompare(b.start)).map(b=>`
-<div class="item" style="margin:8px 0">
-<strong>${esc(b.name)}</strong>
-<span class="pill">${esc(camperName(b.camper))}</span>
-<p>${esc(b.start)} to ${esc(b.end)} · ${b.truck?esc(truckName(b.truck)):'No truck'}</p>
-<button class="danger" data-delete="${esc(b.id)}">Delete reservation</button>
-</div>`).join(''):'<p class="muted">No reservations yet.</p>';
-}
-$('bookingForm').addEventListener('submit',e=>{
-e.preventDefault();
-const b={
-id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),
-name:$('bookingName').value.trim(),
-camper:Number($('bookingCamper').value),
-truck:$('bookingTruck').value?Number($('bookingTruck').value):null,
-start:$('startDate').value,
-end:$('endDate').value,
-departure:{},returning:{}
-};
-if(!b.name||!b.start||!b.end||b.end<b.start){
-alert('Enter a name and valid dates.');return;
-}
-const overlap=state.bookings.find(x=>x.start<=b.end&&b.start<=x.end&&(x.camper===b.camper||(b.truck&&x.truck===b.truck)));
-if(overlap){
-alert('That camper or truck is already booked during those dates.');return;
-}
-state.bookings.push(b);
-save();e.target.reset();render();
-alert('Reservation saved.');
-});
-let month=new Date();month.setDate(1);
-function renderCalendar(){
-const y=month.getFullYear(),m=month.getMonth();
-$('monthLabel').textContent=month.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="weekday">${d}</div>`).join('');
-const offset=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
-for(let i=0;i<offset;i++)html+='<div></div>';
-for(let d=1;d<=days;d++){
-const date=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-const bookings=state.bookings.filter(b=>b.start<=date&&b.end>=date);
-html+=`<div class="day"><strong>${d}</strong>${bookings.map(b=>`<div class="event" title="${esc(b.name)}">${esc(camperName(b.camper))}</div>`).join('')}</div>`;
-}
-$('calendarGrid').innerHTML=html;
-}
-$('prevMonth').onclick=()=>{month.setMonth(month.getMonth()-1);renderCalendar()};
-$('nextMonth').onclick=()=>{month.setMonth(month.getMonth()+1);renderCalendar()};
-function renderChecks(selected){
-const select=$('checkBooking');
-const previous=selected||select.value;
-select.innerHTML='<option value="">Choose a reservation</option>'+
-state.bookings.map(b=>`<option value="${esc(b.id)}">${esc(b.name)} — ${esc(camperName(b.camper))}</option>`).join('');
-if(state.bookings.some(b=>b.id===previous))select.value=previous;
-const b=state.bookings.find(x=>x.id===select.value);
-$('checkContent').innerHTML=b?`
-<div class="grid" style="margin-top:15px">
-${[['departure','Before departure',departure],['returning','After return',returning]].map(([key,title,items])=>`
-<div class="item checks"><h3>${title}</h3>
-${items.map((item,i)=>`<label><input type="checkbox" data-check="${key}" data-index="${i}" ${b[key]?.[i]?'checked':''}>${esc(item)}</label>`).join('')}
-</div>`).join('')}
-</div>`:'<p class="muted">Select a reservation to complete its checklists.</p>';
-}
-$('checkBooking').onchange=()=>renderChecks();
-document.addEventListener('change',e=>{
-const el=e.target;
-if(el.dataset.check){
-const b=state.bookings.find(x=>x.id===$('checkBooking').value);
-if(b){
-b[el.dataset.check]??={};
-b[el.dataset.check][el.dataset.index]=el.checked;
-save();
-}
-}
-if(el.dataset.photo){
-const f=el.files[0];if(!f)return;
-if(f.size>500000){
-alert('Choose an image smaller than 500 KB.');
-el.value='';return;
-}
-const reader=new FileReader();
-reader.onload=()=>{
-const c=state.campers.find(x=>x.id===Number(el.dataset.photo));
-c.photo=reader.result;
-try{save();render()}catch{alert('Browser storage is full. Use a smaller photo.')}
-};
-reader.readAsDataURL(f);
-}
-});
-document.addEventListener('click',e=>{
-const b=e.target.closest('button');if(!b)return;
-if(b.dataset.tab){
-document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hidden',s.id!==b.dataset.tab));
-document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));
-return;
-}
-if(b.dataset.saveCamper){
-const id=Number(b.dataset.saveCamper),c=state.campers.find(x=>x.id===id);
-document.querySelectorAll(`[data-camper="${id}"]`).forEach(x=>c[x.dataset.field]=x.value);
-save();render();alert('Camper saved.');
-}
-if(b.dataset.saveTruck){
-const id=Number(b.dataset.saveTruck),t=state.trucks.find(x=>x.id===id);
-document.querySelectorAll(`[data-truck="${id}"]`).forEach(x=>t[x.dataset.field]=x.value);
-save();render();alert('Truck saved.');
-}
-if(b.dataset.delete){
-if(confirm('Delete this reservation?')){
-state.bookings=state.bookings.filter(x=>x.id!==b.dataset.delete);
-save();render();
-}
-}
-});
-$('exportBtn').onclick=()=>{
-const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),
-url=URL.createObjectURL(blob),a=document.createElement('a');
-a.href=url;a.download='rv-manager-backup.json';a.click();
-setTimeout(()=>URL.revokeObjectURL(url),1000);
-};
-$('importFile').onchange=async e=>{
-const file=e.target.files[0];if(!file)return;
-try{
-const data=JSON.parse(await file.text());
-if(!Array.isArray(data.campers)||!Array.isArray(data.trucks)||!Array.isArray(data.bookings))throw Error('Invalid backup');
-if(!confirm('Replace current browser data with this backup?'))return;
-state=data;save();render();alert('Backup restored.');
-}catch(err){alert('Could not import backup: '+err.message)}
-e.target.value='';
-};
+const KEY='family-rv-manager-v1';
+const initial=()=>({campers:Array.from({length:20},(_,i)=>({id:'c'+(i+1),name:'Camper '+(i+1),type:i%2?'Fifth wheel':'Bumper pull',vin:'',photo:''})),trucks:Array.from({length:4},(_,i)=>({id:'t'+(i+1),name:'Truck '+(i+1),notes:''})),rentals:[],inspections:{}});
+let data;try{const saved=JSON.parse(localStorage.getItem(KEY));data=saved&&Array.isArray(saved.campers)&&Array.isArray(saved.trucks)&&Array.isArray(saved.rentals)?saved:initial()}catch{data=initial()}
+const $=id=>document.getElementById(id);const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const save=()=>{status('Saving…')};
+const dateISO=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+let month=new Date();month=new Date(month.getFullYear(),month.getMonth(),1);
+const camper=id=>data.campers.find(x=>x.id===id);const truck=id=>data.trucks.find(x=>x.id===id);
+function showTab(tab){document.querySelectorAll('section').forEach(x=>x.classList.toggle('active',x.id===tab));document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));render()}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function options(items,empty){return (empty?'<option value="">No truck</option>':'')+items.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}
+function render(){const today=dateISO(new Date());$('stats').innerHTML=[[data.campers.length,'Campers'],[data.trucks.length,'Trucks'],[data.rentals.filter(r=>r.start<=today&&r.end>=today).length,'Currently out'],[data.rentals.filter(r=>r.start>today).length,'Upcoming rentals']].map(([n,l])=>`<div class="stat"><strong>${n}</strong>${l}</div>`).join('');
+$('upcoming').innerHTML=data.rentals.filter(r=>r.end>=today).sort((a,b)=>a.start.localeCompare(b.start)).map(r=>`<p><b>${esc(camper(r.camperId)?.name||'Unknown camper')}</b> — ${esc(r.start)} to ${esc(r.end)} · ${esc(r.customer)} ${r.truckId?'· '+esc(truck(r.truckId)?.name||'Truck removed'):''}</p>`).join('')||'<p class="empty">No upcoming rentals yet.</p>';
+$('camperList').innerHTML=data.campers.map(c=>`<div class="item">${c.photo?`<img src="${esc(c.photo)}" alt="Camper photo" onerror="this.style.display='none'">`:''}<b>${esc(c.name)}</b><p class="muted">${esc(c.type)}<br>VIN: ${esc(c.vin||'Not entered')}</p><button onclick="editCamper('${c.id}')">Edit</button></div>`).join('');
+$('truckList').innerHTML=data.trucks.map(t=>`<div class="item"><b>${esc(t.name)}</b><p class="muted">${esc(t.notes||'No notes')}</p><button onclick="editTruck('${t.id}')">Edit</button></div>`).join('');
+const rc=$('rentalCamper').value,rt=$('rentalTruck').value,cc=$('checkCamper').value;$('rentalCamper').innerHTML=options(data.campers);$('rentalTruck').innerHTML=options(data.trucks,true);$('checkCamper').innerHTML=options(data.campers);if(rc)$('rentalCamper').value=rc;if(rt)$('rentalTruck').value=rt;if(cc)$('checkCamper').value=cc;
+$('rentalList').innerHTML=data.rentals.slice().sort((a,b)=>b.start.localeCompare(a.start)).map(r=>`<div class="panel"><b>${esc(camper(r.camperId)?.name||'Camper removed')}</b> · ${esc(r.start)} to ${esc(r.end)}<p>${esc(r.customer)} · Truck: ${esc(truck(r.truckId)?.name||'None assigned')}</p><button class="danger" onclick="deleteRental('${r.id}')">Delete rental</button></div>`).join('')||'<div class="panel empty">No rentals yet.</div>';renderCalendar();renderChecks()}
+$('camperForm').onsubmit=e=>{e.preventDefault();if(!assertCanEdit())return;const id=$('camperId').value||db.collection('campers').doc().id;const c={name:$('camperName').value.trim(),type:$('camperType').value,vin:$('camperVin').value.trim(),photo:$('camperPhoto').value.trim()};saveDoc('campers',id,c,true);resetCamper();};
+function editCamper(id){const c=camper(id);$('camperId').value=c.id;$('camperName').value=c.name;$('camperType').value=c.type;$('camperVin').value=c.vin;$('camperPhoto').value=c.photo;window.scrollTo({top:0,behavior:'smooth'})}function resetCamper(){$('camperForm').reset();$('camperId').value=''}
+$('truckForm').onsubmit=e=>{e.preventDefault();if(!assertCanEdit())return;const id=$('truckId').value||db.collection('trucks').doc().id;const t={name:$('truckName').value.trim(),notes:$('truckNotes').value.trim()};saveDoc('trucks',id,t,true);resetTruck();};
+function editTruck(id){const t=truck(id);$('truckId').value=t.id;$('truckName').value=t.name;$('truckNotes').value=t.notes;window.scrollTo({top:0,behavior:'smooth'})}function resetTruck(){$('truckForm').reset();$('truckId').value=''}
+$('rentalForm').onsubmit=e=>{e.preventDefault();if(!assertCanEdit())return;const camperId=$('rentalCamper').value,truckId=$('rentalTruck').value,start=$('rentalStart').value,end=$('rentalEnd').value,customer=$('rentalCustomer').value.trim();if(end<start)return alert('Return date must be on or after departure date');const overlaps=r=>start<=r.end&&end>=r.start;if(data.rentals.some(r=>overlaps(r)&&(r.camperId===camperId||(truckId&&r.truckId===truckId))))return alert('This camper or truck is already booked for overlapping dates');const rental={id:'r'+Date.now()+Math.random().toString(36).slice(2),camperId,truckId,start,end,customer};data.rentals.push(rental);saveDoc('reservations',rental.id,rental);$('rentalForm').reset();render()};
+function deleteRental(id){if(!assertCanEdit())return;if(confirm('Delete this rental?')){data.rentals=data.rentals.filter(r=>r.id!==id);deleteDoc('reservations',id);render()}}
+function moveMonth(n){month=new Date(month.getFullYear(),month.getMonth()+n,1);renderCalendar()}
+function renderCalendar(){const y=month.getFullYear(),m=month.getMonth();$('monthTitle').textContent=month.toLocaleString('en-US',{month:'long',year:'numeric'});let html=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="week">${d}</div>`).join('');const offset=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();for(let i=0;i<offset;i++)html+='<div></div>';for(let d=1;d<=days;d++){const day=dateISO(new Date(y,m,d));const events=data.rentals.filter(r=>r.start<=day&&r.end>=day);html+=`<div class="day"><b>${d}</b>${events.map(r=>`<span class="event" title="${esc(r.customer)}">${esc(camper(r.camperId)?.name||'Camper')}</span>`).join('')}</div>`}$('calendarGrid').innerHTML=html}
+const checklist={departure:['Exterior and roof inspected','Tires and tire pressure checked','Lights and brakes tested','Hitch and safety chains checked','Propane and battery checked','Water and plumbing checked','Interior cleaned and photographed','Keys and supplies accounted for'],return:['Exterior checked for damage','Interior checked for damage','Photos taken','Tires and hitch inspected','Water and waste tanks checked','Supplies and keys returned','Cleaning completed','Maintenance needs recorded']};
+function checkKey(){return $('checkCamper').value+'-'+$('checkType').value}function renderChecks(){const record=data.inspections[checkKey()]||{items:[],notes:'',savedAt:''};$('checkList').innerHTML=checklist[$('checkType').value].map((item,i)=>`<label class="check"><input type="checkbox" data-check="${i}" ${record.items.includes(i)?'checked':''}><span>${esc(item)}</span></label>`).join('');$('checkNotes').value=record.notes;$('checkSaved').textContent=record.savedAt?'Last saved: '+record.savedAt:'No saved inspection for this camper and type'}
+$('checkCamper').onchange=renderChecks;$('checkType').onchange=renderChecks;
+function saveInspection(){if(!assertCanEdit())return;if(!$('checkCamper').value)return alert('Select a camper');data.inspections[checkKey()]={items:[...document.querySelectorAll('[data-check]:checked')].map(el=>Number(el.dataset.check)),notes:$('checkNotes').value,savedAt:new Date().toLocaleString()};saveDoc('campers',$('checkCamper').value,{inspections:{[checkKey()]:data.inspections[checkKey()]}},true);renderChecks()}
 render();
-</script>
-</body>
-</html>
+// Firebase config: replace API_KEY_FROM_FIREBASE with the exact apiKey in Firebase Console > Project settings > Your apps > Config.
+const firebaseConfig = {
+  apiKey: "AIzaSyCq96QruvyeRJ-mGogPoRSPo_gEJA3bk64",
+  authDomain: "family-rv-rental-manager.firebaseapp.com",
+  projectId: "family-rv-rental-manager",
+  storageBucket: "family-rv-rental-manager.firebasestorage.app",
+  messagingSenderId: "451430555292",
+  appId: "1:451430555292:web:2f56f511252b832dd4d759"
+};
+let unsubscribe=[],role=null,ready=false,db=null,loaded=new Set();
+const status=msg=>$('storageStatus').textContent=msg;
+const authPanel=$('loginPanel');
+function stopListeners(){unsubscribe.forEach(fn=>fn());unsubscribe=[];ready=false;loaded.clear();role=null;authPanel.style.display='block';$('importBackup').style.display='none'}
+function assertCanEdit(){if(!ready||!['owner','manager'].includes(role)){alert('You need owner or manager access and a live connection to make changes.');return false}return true}
+async function saveDoc(collection,id,payload,merge=false){if(!assertCanEdit())return;try{status('Saving…');await db.collection(collection).doc(id).set(payload,{merge});status('Saved to Firebase')}catch(e){status('Save failed: '+e.message);alert('Save failed. Please refresh and try again: '+e.message)}}
+async function deleteDoc(collection,id){if(!assertCanEdit())return;try{status('Deleting…');await db.collection(collection).doc(id).delete();status('Saved to Firebase')}catch(e){status('Delete failed: '+e.message);alert('Delete failed: '+e.message)}}
+function applyRemote(kind,docs){if(kind==='campers'){data.campers=docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));data.inspections={};for(const c of data.campers)if(c.inspections)Object.assign(data.inspections,c.inspections)}else if(kind==='trucks'){data.trucks=docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}))}else{data.rentals=docs.map(d=>({id:d.id,...d.data()}))}loaded.add(kind);if(loaded.size===3){ready=true;status('Live sync connected • '+role)}render()}
+async function startSync(user){stopListeners();db=firebase.firestore();const member=await db.collection('familyMembers').doc(user.uid).get();if(!member.exists||member.data().active!==true||!['owner','manager','viewer'].includes(member.data().role))throw Error('This account is not an approved active family member.');role=member.data().role;
+// Do not show browser-cached rental data while waiting for remote snapshots.
+data={campers:[],trucks:[],rentals:[],inspections:{}};render();
+for(const kind of ['campers','trucks','reservations']){const off=db.collection(kind).onSnapshot(snap=>applyRemote(kind==='reservations'?'rentals':kind,snap.docs),err=>{status('Sync error: '+err.message);ready=false;authPanel.style.display='block';$('loginMessage').textContent='Unable to load family data: '+err.message});unsubscribe.push(off)}
+authPanel.style.display='none';$('importBackup').style.display=role==='owner'?'inline-block':'none';status('Connecting…')}
+// Import requires explicit owner approval, and never overwrites existing Firestore records.
+$('importBackup').onclick=async()=>{if(role!=='owner'||!ready)return;const raw=localStorage.getItem(KEY);if(!raw)return alert('No browser backup found. Your downloaded JSON backup is still safe; do not delete it.');let backup;try{backup=JSON.parse(raw);if(!Array.isArray(backup.campers)||!Array.isArray(backup.trucks)||!Array.isArray(backup.rentals))throw Error('Invalid backup')}catch(e){return alert('Cannot read browser backup: '+e.message)}
+const counts=await Promise.all(['campers','trucks','reservations'].map(k=>db.collection(k).limit(1).get()));if(counts.some(x=>!x.empty))return alert('Firebase already contains records. Import stopped to prevent overwriting data.');if(!confirm('Import the saved browser data into EMPTY Firebase collections? This will upload camper, truck, rental and checklist information.'))return;
+try{const writes=[];for(const c of backup.campers){const inspections={};for(const [k,v] of Object.entries(backup.inspections||{}))if(k.startsWith(c.id+'-'))inspections[k]=v;writes.push(['campers',c.id,{...c,inspections}])}for(const t of backup.trucks)writes.push(['trucks',t.id,t]);for(const r of backup.rentals)writes.push(['reservations',r.id,r]);for(let i=0;i<writes.length;i+=400){const batch=db.batch();for(const [kind,id,record] of writes.slice(i,i+400))batch.set(db.collection(kind).doc(id),record);await batch.commit()}alert('Import finished. Confirm all data appears before deleting any backup.')}catch(e){alert('Import may be incomplete: '+e.message+'. Keep your backup and do not retry until you check Firestore.')}};
+$('signOut').onclick=()=>firebase.auth().signOut();
+// Disable editing for viewers and while disconnected; rules also enforce permissions on server.
+const originalRender=render;render=function(){originalRender();const can=ready&&['owner','manager'].includes(role);document.querySelectorAll('#camperForm input,#camperForm select,#camperForm button,#truckForm input,#truckForm button,#rentalForm input,#rentalForm select,#rentalForm button,#inspections input,#inspections textarea,#inspections select,#inspections button,#camperList button,#truckList button,#rentalList button').forEach(el=>el.disabled=!can)};
+if(firebaseConfig.apiKey==='API_KEY_FROM_FIREBASE'){$('loginMessage').textContent='Setup needed: insert the exact Firebase API key in this file before publishing.';status('Firebase configuration incomplete')}else{
+firebase.initializeApp(firebaseConfig);
+$('loginForm').onsubmit=async e=>{e.preventDefault();$('loginMessage').textContent='Signing in…';try{await firebase.auth().signInWithEmailAndPassword($('loginEmail').value,$('loginPassword').value)}catch(err){$('loginMessage').textContent=err.message}};
+firebase.auth().onAuthStateChanged(async user=>{if(!user){stopListeners();$('loginMessage').textContent='Sign in to continue';return}try{await startSync(user)}catch(e){stopListeners();$('loginMessage').textContent=e.message;await firebase.auth().signOut()}})}
+render();
+</script></body></html>
